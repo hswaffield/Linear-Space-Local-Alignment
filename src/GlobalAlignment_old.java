@@ -10,10 +10,10 @@ public class GlobalAlignment_old {
 	public static LinkedList<Character> alignSecond = new LinkedList<Character>();
 	
 	 //This computes the actual global alignment:
-	 public static void globalAlignment(int[][] scoringMatrix, String first, String second) {
+	 public static void globalAlignment(int[][] scoringMatrix, String reference, String search) {
 		 //top and leftmost rows reflect no substring, not even first letter...
-		 int width = first.length() + 1;
-		 int height = second.length() + 1;
+		 int width = reference.length() + 1;
+		 int height = search.length() + 1;
 		 
 		 int[][] alignment = new int[height][width];		 
 		 char[][] backtrack = new char[height][width];
@@ -48,7 +48,7 @@ public class GlobalAlignment_old {
 					 indelBack = '<';
 				 }
 				 
-				 int matchScore = alignment[i-1][j-1] + Scoring.getScore(scoringMatrix, first.charAt(j-1), second.charAt(i-1));
+				 int matchScore = alignment[i-1][j-1] + Scoring.getScore(scoringMatrix, reference.charAt(j-1), search.charAt(i-1));
 												 
 				 if (maxIndel > matchScore) {
 					 //take the maxIndel...
@@ -67,7 +67,7 @@ public class GlobalAlignment_old {
 		 System.out.println(alignment[height-1][width-1]);
 		 
 		 //computing the backtrack path:
-		 followBacktrack(first, second, backtrack, second.length(), first.length());
+		 followBacktrack(reference, search, backtrack, search.length(), reference.length());
 	 }
 	
 
