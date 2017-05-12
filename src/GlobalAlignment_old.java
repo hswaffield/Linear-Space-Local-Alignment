@@ -10,6 +10,7 @@ public class GlobalAlignment_old {
 	public static LinkedList<Character> alignSecond = new LinkedList<Character>();
 	
 	 //This computes the actual global alignment:
+	//include an indel penalty param
 	 public static void globalAlignment(int[][] scoringMatrix, String reference, String search) {
 		 //top and leftmost rows reflect no substring, not even first letter...
 		 int width = reference.length() + 1;
