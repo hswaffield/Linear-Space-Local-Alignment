@@ -27,6 +27,8 @@ public class LinearSpaceLocalAlignment {
 		//this stores the beginning of every local sequence, holds first boundary indexes:
 		LinkedList<int[][]> currentTaxiPredecessors = new LinkedList<>();
 		
+		//TODO: consider restructuing this linkedList approach ... perhaps its not needed at all, and a variable can be overwritten... messy with arrays?
+		
 		currentScores.add(new int[searchLen+1]);
 		
 		currentTaxiPredecessors.add(new int[searchLen+1][2]);
