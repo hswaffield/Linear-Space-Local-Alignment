@@ -2,12 +2,10 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 //Algorithm which computes a local alignment with linear space
-
-//actual alignment computation, still in progress...
-
 public class LinearSpaceLocalAlignment {
 	
 	// this returns the coordinates and score of the end of the local alignment
+	// performed in linear space:
 	public static int[] findLocalBoundaries(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		// this will hold the data to be returned:
 		int[] coordinateData = new int[5];
@@ -26,9 +24,7 @@ public class LinearSpaceLocalAlignment {
 		
 		//this stores the beginning of every local sequence, holds first boundary indexes:
 		LinkedList<int[][]> currentTaxiPredecessors = new LinkedList<>();
-		
-		//TODO: consider restructuing this linkedList approach ... perhaps its not needed at all, and a variable can be overwritten... messy with arrays?
-		
+				
 		currentScores.add(new int[searchLen+1]);
 		
 		currentTaxiPredecessors.add(new int[searchLen+1][2]);
@@ -107,20 +103,13 @@ public class LinearSpaceLocalAlignment {
 		return coordinateData;
 	}
 	
-	
 	//linear Space local Align:
 	public static String[] linearSpaceLocalAlign(int[][] scoringMatrix, int indelPenalty, String reference, String search ) {
 		int[] gridInfo = findLocalBoundaries(scoringMatrix, indelPenalty, reference, search);
 		
 		String refLocal = reference.substring(gridInfo[1], gridInfo[3]+1);
 		String searchLocal = search.substring(gridInfo[2], gridInfo[4]+1);
-		
-		System.out.println("refLocal: " + refLocal);
-		
-//		int score = Hirschberg.scoreGlobally(scoringMatrix, indelPenalty, refLocal, searchLocal);
-//		
-//		System.out.println(score);
-		
+	
 		String[] alignment = GlobalAlignment_old.globalAlignExternal(scoringMatrix, indelPenalty, refLocal, searchLocal);
 		
 		return alignment;
@@ -133,17 +122,6 @@ public class LinearSpaceLocalAlignment {
 		String search = s.nextLine();
 		s.close();
 		
-		int[] coordinateData = findLocalBoundaries(Scoring.PAM250, 5, reference, search);
-
-		p(coordinateData[0] );
-		p(coordinateData[1] );
-		p(coordinateData[2] );
-		p(coordinateData[3] );
-		p(coordinateData[4] );
-		
-		p("");
-		
-		
 		//Timing our new version:
 		
 		long startTime = System.nanoTime();
@@ -155,7 +133,6 @@ public class LinearSpaceLocalAlignment {
 		long duration = (endTime - startTime);
 		
 		
-		
 		System.out.println();
 		
 		System.out.println(align[0]);
@@ -164,6 +141,7 @@ public class LinearSpaceLocalAlignment {
 		System.out.println("new runtime duration: " + (duration + 0.0) / 1000000000.0);
 		
 		
+		System.out.println();
 		
 		//Timing our old version:
 		
@@ -174,8 +152,6 @@ public class LinearSpaceLocalAlignment {
 		long endTime_old = System.nanoTime();
 		
 		long duration_old = (endTime_old - startTime_old);
-				
-
 
 		
 		System.out.println(align_old[0]);
@@ -185,7 +161,7 @@ public class LinearSpaceLocalAlignment {
 		
 		System.out.println();
 		
-		System.out.println("time increased by: " + (duration + 0.0) / (duration_old + 0.0));
+		System.out.println("time increased by a factor of: " + (duration + 0.0) / (duration_old + 0.0));
 	}
 	
 	

@@ -1,15 +1,14 @@
-
 import java.util.LinkedList;
 import java.util.Scanner;
 
+//* Global alignment in linear space... not yet completely functional... produces isolated errors in otherwise correct paths
+// 13+ hours in, output is close, but not completely correct, in every case.
 
-//* Global alignment in linear space:
-
+// a real world benefit of using this algorithm as part of local alignment is most felt, when the local alignment portion 
+// of the problem, those subsequences within the "local alignment boundaries" is largest
 public class Hirschberg {
-	//goal:
-	// From source to middle ... returns all the lengths of paths ending in middle row...
-	// to sink ... 
 	
+	//computes a global alignment score for two strings in linear space
 	public static int scoreGlobally(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		int searchLen = search.length();
 		int refLen = reference.length();
@@ -58,6 +57,7 @@ public class Hirschberg {
 		return currentScores.removeLast()[searchLen];
 	}
 	
+	// Computes and returns the array of values for the longest path going through each middle node from source
 	public static int[] fromSource(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		int searchLen = search.length();
 		int refLen = reference.length();
@@ -65,13 +65,10 @@ public class Hirschberg {
 		//getting the middle:
 		int midCol = ((refLen + 1) / 2);
 		
-		//System.out.println("midcol: " + midCol);
-		
 		//only need to store O(searchLen) values:
 		LinkedList<int[]> currentScores = new LinkedList<>();
 		
-		//initialization causing trouble!
-		
+		//initializing, like in standard global alignment
 		int[] baseCaseCol = new int[searchLen + 1];
 		
 		for (int i = 0; i <= searchLen; i++) {
@@ -85,7 +82,7 @@ public class Hirschberg {
 			int[] nextCol = new int[searchLen+1];
 			int[] lastCol = currentScores.removeFirst();
 			
-			//represents taking lots of insertions:
+			//represents taking lots of insertions (top row base cases):
 			nextCol[0] = 0 - (indelPenalty * (i+1));	
 			
 			//char being considered at this iteration, in the reference
@@ -111,33 +108,19 @@ public class Hirschberg {
 		return currentScores.removeLast();
 	}
 	
+	//Similar to fromSource, however it computes the scores from the sink to the middle nodes, 
+	// using a similar algorithm, but with reversed input strings.
 	public static int[] toSink(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		int searchLen = search.length();
 		int refLen = reference.length();
 		
-		//TODO: consider what to do when the string is of odd length
-		//odd + even = odd worked
-		//even + even = even did not...
-		//odd + odd = even did not...
-		//odd + even came up short...
-		
-		
-		
 		//getting the middle:
 		int midCol = refLen - ((refLen + 1) / 2);
-		
-		//System.out.println("midcol: " + midCol);
-		
-		//cut in half the part to be reversed:
-		//String refReverse = new StringBuilder(reference.substring(midCol -1)).reverse().toString();
-		//TODO: see if this works ^
+	
 		String refReverse = new StringBuilder(reference).reverse().toString();
 		
 		String searchReverse = new StringBuilder(search).reverse().toString();
-		
-//		System.out.println(reference.substring(0, midCol));
-//		System.out.println(refReverse);
-		
+
 		//only need to store O(searchLen) values:
 		LinkedList<int[]> currentScores = new LinkedList<>();
 		
@@ -175,6 +158,9 @@ public class Hirschberg {
 	}
 	
 	//This uses fromSource and toSink to find the index of the middle node:
+	//The middle node is the highest index value, with a maximum i-path, 
+	//the sum of its respective fromSource and toSink values, the length
+	//of the longest path through that node.
 	public static int[] middleNode(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		int[] middNode = new int[2];
 		
@@ -182,13 +168,8 @@ public class Hirschberg {
 			int[] simple = new int[2];
 			simple[0] = 1;
 			simple[1] = 1;
-			
-			// not 0, 0?
-			
 			return simple;
 		}
-		
-		System.out.println("inMiddleNode: + " + reference + "  search: " + search);
 		
 		int[] fromSourceScores = fromSource(scoringMatrix, indelPenalty, reference, search);
 		int[] toSinkScores = toSink(scoringMatrix, indelPenalty, reference, search);
@@ -202,7 +183,6 @@ public class Hirschberg {
 		
 		int j = 0;
 		for (int i = toSinkScores.length-1; i >= 0; i--) {
-			//System.out.println(toSinkScores[i] + fromSourceScores[j]);
 			int maxPathThroughNode = toSinkScores[i] + fromSourceScores[j];
 			if (maxPathThroughNode > maxNodePathScore) {
 				maxNodePathScore = maxPathThroughNode;
@@ -212,36 +192,27 @@ public class Hirschberg {
 			j++;
 		}
 		
-		//(refLen + 1) / 2 - maybe return that?
-		
 		middNode[0] = searchIndex;
 		middNode[1] = (reference.length() + 1) / 2;
 		
-		System.out.println("maxScore: " + maxNodePathScore);
-		System.out.println("maxScore Row: " + middNode[0]);
-		System.out.println("maxScore Col: " + middNode[1]);
+//		System.out.println("maxScore: " + maxNodePathScore);
+//		System.out.println("maxScore Row: " + middNode[0]);
+//		System.out.println("maxScore Col: " + middNode[1]);
 		
 		return middNode;
 	}
-	
-	
-	//does the recursive magic:
-	
-	//TODO: optimize a lot of stuff in this code...
-	public static LinkedList<int[]> hirschbergInner(int[][] scoringMatrix, int indelPenalty, String reference, String search, int refOffset, int searchOffset) {
+
+	// hirschbergInner: recursively breaks problems down into left and right subproblems, where middle nodes, those which can
+	// be determined to exist in a correct optimal path, are added, to a path, which is later processed/
+	public static LinkedList<int[]> hirschbergInner(int[][] scoringMatrix, int indelPenalty, 
+			String reference, String search, int refOffset, int searchOffset) {
 		LinkedList<int[]> middleNodes = new LinkedList<>();
 		
 		int refLen = reference.length();
 		int searchLen = search.length();
 		
-		
-		//: what if one is length 1, and the other is not...
 		if (refLen <= 1 && searchLen <= 1) {
-		//if (refLen <= 1) {
-			
-			//nt[] middleNode = new int[2];
 			LinkedList<int[]> baseCase = new LinkedList<>();
-			//middleNode[1] = refOffset;
 			
 			int[] middleNode = middleNode(scoringMatrix, indelPenalty, reference, search);
 			
@@ -251,15 +222,12 @@ public class Hirschberg {
 			baseCase.add(middleNode);
 			
 			return baseCase;
-			
 		} 
 		
 		else if (refLen <= 1 && searchLen > 1) {
 			LinkedList<int[]> baseCase2 = new LinkedList<>();
 			
-			
 			for (int i = 0; i < searchLen; i++) {
-				//do all of them...
 				int[] next = new int[2];
 				next[0] = searchOffset + i;
 				next[1] = refOffset;
@@ -270,14 +238,6 @@ public class Hirschberg {
 		} else if (refLen > 1 && searchLen <= 1) {
 			//third base case...
 			LinkedList<int[]> baseCase3 = new LinkedList<>();
-			
-		//	int[] middleNode = middleNode(scoringMatrix, indelPenalty, reference, search);
-			//^1,1
-			
-			//reflen still 2...
-			
-			//int[] middleNode2 = middleNode(scoringMatrix, indelPenalty, reference.substring(1), search);
-			
 			for (int i = 0; i < refLen; i++) {
 				//do all of them...
 				int[] next = new int[2];
@@ -287,31 +247,8 @@ public class Hirschberg {
 				baseCase3.add(next);
 			}
 			
-//			baseCase3.add(middleNode);
-//			baseCase3.add(middleNode2);
-			
 			return baseCase3;
-			
 		} 
-		
-		
-//		else if (refLen == 2 && searchLen == 2) {
-//		
-//			//nt[] middleNode = new int[2];
-//			LinkedList<int[]> baseCase = new LinkedList<>();
-//			//middleNode[1] = refOffset;
-//			
-//			int[] middleNode = middleNode(scoringMatrix, indelPenalty, reference, search);
-//			
-//			middleNode[0] += searchOffset;
-//			middleNode[1] += refOffset;
-//			
-//			baseCase.add(middleNode);
-//			
-//			return baseCase;
-//		}
-		
-		//basecase for length 3 and 2...
 		
 		else {
 			int[] middleNode = middleNode(scoringMatrix, indelPenalty, reference, search);
@@ -319,15 +256,7 @@ public class Hirschberg {
 			int middleSearch = middleNode[0];
 			int middleRef = middleNode[1];
 			
-			
-//			System.out.println("MIDDLEREF: " + middleRef);
-//			System.out.println("MIDDLESEARCH: " + middleSearch);
-			
-			//existence of column... first column... the one that does not have any ref char ... 
-			
-			//maybe suntract 1... from midd ref...
-			
-			System.out.println("Calling recursively: on: " + reference.substring(0, middleRef) + " " + search.substring(0, middleSearch));
+			//System.out.println("Calling recursively: on: " + reference.substring(0, middleRef) + " " + search.substring(0, middleSearch));
 			
 			middleNodes.addAll(0, hirschbergInner(scoringMatrix, indelPenalty, reference.substring(0, middleRef), search.substring(0, middleSearch), 
 					refOffset, searchOffset));
@@ -337,10 +266,8 @@ public class Hirschberg {
 			
 			//middlenode of currentProblem:
 			middleNodes.add(middleNode);
-			
-			//-1?
-			
-			System.out.println("Calling recursively: on: " + reference.substring(middleRef) + " " + search.substring(middleSearch));
+
+			//System.out.println("Calling recursively: on: " + reference.substring(middleRef) + " " + search.substring(middleSearch));
 			
 			middleNodes.addAll(hirschbergInner(scoringMatrix, indelPenalty, reference.substring(middleRef), search.substring(middleSearch),
 					refOffset + middleRef, searchOffset + middleSearch));
@@ -350,7 +277,8 @@ public class Hirschberg {
 		
 	}
 	
-	
+	//getPathCoords processes the path output from hirshbergInner, removing redudant information, and adding the beginning and 
+	// end nodes, if necessary
 	public static LinkedList<int[]> getPathCoords(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		LinkedList<int[]> pathToProcess = hirschbergInner(scoringMatrix, indelPenalty, reference, search, 0, 0);
 		int numToCheck = pathToProcess.size() - 1;
@@ -372,11 +300,8 @@ public class Hirschberg {
 			newPath.add(next);
 		}
 		
-		//TODO: why do some paths not have 0,0 to begin with?
-		
 		int[] first = newPath.getFirst();
-		//System.out.println("PROCESSING>>> FIRST: BEFORE CHECK " + first[0] + " , " + first[1]);
-		
+	
 		if(first[0] != 0 || first[1] != 0) {
 			
 			int[] origin = new int[2];
@@ -384,14 +309,10 @@ public class Hirschberg {
 			newPath.addFirst(origin);
 		}
 		
-		//System.out.println("PROCESSING>>> FIRST: " + newPath.getFirst()[0] + " , " + newPath.getFirst()[1]);
-		
-		
-		return newPath;
-		
+		return newPath;	
 	}
 	
-	
+	// pathToAlignment translastes a processed coordinate path, to an alignment, outputing strings
 	public static String[] pathToAlignment(LinkedList<int[]> path, String reference, String search) {
 		String[] alignment = new String[2];
 		int alignmentSize = path.size();
@@ -399,11 +320,8 @@ public class Hirschberg {
 		char[] refAlign = new char[alignmentSize];
 		char[] searchAlign = new char[alignmentSize];
 		
-		
 		int refProgress = 0;
 		int searchProgress = 0;
-		
-		System.out.println("SIZE" + alignmentSize + "last elt: " + path.get(alignmentSize - 1)[0] + " " + path.get(alignmentSize - 1)[1]);
 		
 		for (int i = 0; i < alignmentSize - 1; i++) {
 			int[] current = path.removeFirst();
@@ -420,14 +338,13 @@ public class Hirschberg {
 				searchProgress++;
 				
 			} else if (current[0] + 1 == next[0] && current[1] == next[1]) {
-				//we have an insertion:
+				//there is an insertion:
 				refAlign[i] = '-';
 				searchAlign[i] = search.charAt(searchProgress);
 				
 				searchProgress++;
 			} else if (current[1] + 1 == next[1] && current[0] == next[0]) {
 				//there is a deletion:
-				
 				refAlign[i] = reference.charAt(refProgress);
 				searchAlign[i] = '-';
 				
@@ -437,13 +354,12 @@ public class Hirschberg {
 			}
 		}
 		
-		
 		alignment[0] = String.valueOf(refAlign);
 		alignment[1] = String.valueOf(searchAlign);
 		return alignment;
 	}
 	
-	
+	//Reads in inputs, will run various functions on them:
 	public static void main(String[] args) {
 		Scanner s = new Scanner(System.in);
 		 
@@ -451,6 +367,7 @@ public class Hirschberg {
 		String search = s.nextLine();
 		s.close();
 		
+		//TRY: PLEASANTLY, MEANLY
 		
 //		int globalScore = scoreGlobally(Scoring.BLOSUM62, 5, reference, search);
 //		
@@ -476,12 +393,12 @@ public class Hirschberg {
 		
 		LinkedList<int[]> path = hirschbergInner(Scoring.BLOSUM62, 5, reference, search, 0, 0);
 		
-		for (int[] n : path) {
-			
-			System.out.print("path: " + n[0] + " col: " + n[1] );
-			
-			System.out.println();
-		}
+//		for (int[] n : path) {
+//			
+//			System.out.print("path: " + n[0] + " col: " + n[1] );
+//			
+//			System.out.println();
+//		}
 	
 		LinkedList<int[]> pathProcessed = getPathCoords(Scoring.BLOSUM62, 5, reference, search);
 //
@@ -498,6 +415,8 @@ public class Hirschberg {
 //
 //		
 //		
+		System.out.println(scoreGlobally(Scoring.BLOSUM62, 5, reference, search));
+		
 		for (String al : alignments) {
 			System.out.println(al);
 		}

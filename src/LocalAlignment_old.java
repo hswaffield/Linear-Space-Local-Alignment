@@ -109,12 +109,10 @@ public class LocalAlignment_old {
 		 printAlignment();
 	}
 	
-	
-	 public static String[] returnAlignment() {
-		 //char[] first = alignFirst.toArray(new char[alignFirst.size()]);
-		 
+	// A helper
+	private static String[] returnAlignment() {
 		 int len = alignReference.size();
-		 
+	
 		 char[] first = new char[len];
 		 char[] second = new char[len];
 		 
@@ -122,7 +120,6 @@ public class LocalAlignment_old {
 			 first[i] = alignReference.removeFirst();
 			 second[i] = alignSearch.removeFirst();
 		 }
-		 
 		 
 		 String[] alignment = new String[2];
 		 alignment[0] = String.valueOf(first);

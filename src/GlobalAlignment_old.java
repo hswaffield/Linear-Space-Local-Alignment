@@ -98,9 +98,7 @@ public class GlobalAlignment_old {
 	 }
 	 
 	
-	 public static String[] returnAlignment() {
-		 //char[] first = alignFirst.toArray(new char[alignFirst.size()]);
-		 
+	 private static String[] returnAlignment() {
 		 int len = alignFirst.size();
 		 
 		 char[] first = new char[len];
