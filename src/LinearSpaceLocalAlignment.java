@@ -110,10 +110,12 @@ public class LinearSpaceLocalAlignment {
 	
 	//linear Space local Align:
 	public static String[] linearSpaceLocalAlign(int[][] scoringMatrix, int indelPenalty, String reference, String search ) {
-		int[] gridInfo = findLocalBoundaries(scoringMatrix, 5, reference, search);
+		int[] gridInfo = findLocalBoundaries(scoringMatrix, indelPenalty, reference, search);
 		
 		String refLocal = reference.substring(gridInfo[1], gridInfo[3]+1);
 		String searchLocal = search.substring(gridInfo[2], gridInfo[4]+1);
+		
+		System.out.println("refLocal: " + refLocal);
 		
 //		int score = Hirschberg.scoreGlobally(scoringMatrix, indelPenalty, refLocal, searchLocal);
 //		
@@ -131,20 +133,69 @@ public class LinearSpaceLocalAlignment {
 		String search = s.nextLine();
 		s.close();
 		
-		int[] scores = findLocalBoundaries(Scoring.PAM250, 5, reference, search);
+		int[] coordinateData = findLocalBoundaries(Scoring.PAM250, 5, reference, search);
+
+		p(coordinateData[0] );
+		p(coordinateData[1] );
+		p(coordinateData[2] );
+		p(coordinateData[3] );
+		p(coordinateData[4] );
 		
-//		System.out.println(scores[0]);
-//
-//		System.out.println(scores[1]);
-//		System.out.println(scores[2]);
-//		System.out.println(scores[3]);
-//		System.out.println(scores[4]);
+		p("");
+		
+		
+		//Timing our new version:
+		
+		long startTime = System.nanoTime();
 		
 		String[] align = linearSpaceLocalAlign(Scoring.PAM250, 5, reference, search);
 		
-		//System.out.println(Hirschberg.scoreGlobally(Scoring.PAM250, 5, reference, search));
+		long endTime = System.nanoTime();
+
+		long duration = (endTime - startTime);
+		
+		
+		
+		System.out.println();
 		
 		System.out.println(align[0]);
 		System.out.println(align[1]);
+		System.out.println("new runtime duration (nano): " + duration);
+		System.out.println("new runtime duration: " + (duration + 0.0) / 1000000000.0);
+		
+		
+		
+		//Timing our old version:
+		
+		long startTime_old = System.nanoTime();
+		
+		String[] align_old = LocalAlignment_old.localAlignExternal(Scoring.PAM250, 5, reference, search);
+		
+		long endTime_old = System.nanoTime();
+		
+		long duration_old = (endTime_old - startTime_old);
+				
+
+
+		
+		System.out.println(align_old[0]);
+		System.out.println(align_old[1]);
+		System.out.println("old runtime duration (nano): " + duration_old);
+		System.out.println("old runtime duration: " + (duration_old + 0.0) / 1000000000.0);
+		
+		System.out.println();
+		
+		System.out.println("time increased by: " + (duration + 0.0) / (duration_old + 0.0));
+	}
+	
+	
+	// println shortcut:
+	private static <T> void p(T thing) {
+		System.out.println(thing);
+	}
+
+	// print shortcut:
+	private static <T> void p2(T thing) {
+		System.out.print(thing);
 	}
 }

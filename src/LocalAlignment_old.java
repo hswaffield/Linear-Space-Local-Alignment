@@ -24,7 +24,7 @@ public class LocalAlignment_old {
 	
 	
 	//Performs local alignment, using specified scoring matrix:
-	public static void localAlignment(int[][] scoringMatrix, String reference, String search) {
+	public static void localAlignment(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		//top and leftmost rows reflect no substring, not even first letter...
 		 int width = reference.length() + 1;
 		 int height = search.length() + 1;
@@ -58,10 +58,10 @@ public class LocalAlignment_old {
 				 char indelBack;
 				 
 				 if (alignment[i-1][j] >= alignment[i][j-1]) {
-					 maxIndel = alignment[i-1][j] - 5;
+					 maxIndel = alignment[i-1][j] - indelPenalty;
 					 indelBack = '^';
 				 } else {
-					 maxIndel = alignment[i][j-1] - 5;
+					 maxIndel = alignment[i][j-1] - indelPenalty;
 					 indelBack = '<';
 				 }
 				 
@@ -105,10 +105,38 @@ public class LocalAlignment_old {
 		 String search = s.nextLine();
 		 s.close();
 		 
-		 localAlignment(Scoring.PAM250, reference, search);
+		 localAlignment(Scoring.PAM250, 5, reference, search);
 		 printAlignment();
 	}
 	
+	
+	 public static String[] returnAlignment() {
+		 //char[] first = alignFirst.toArray(new char[alignFirst.size()]);
+		 
+		 int len = alignReference.size();
+		 
+		 char[] first = new char[len];
+		 char[] second = new char[len];
+		 
+		 for (int i = 0; i < len; i++) {
+			 first[i] = alignReference.removeFirst();
+			 second[i] = alignSearch.removeFirst();
+		 }
+		 
+		 
+		 String[] alignment = new String[2];
+		 alignment[0] = String.valueOf(first);
+		 alignment[1] = String.valueOf(second);
+		 
+		 return alignment;
+	 }
+
+
+	 // for other classes to use:
+	 public static String[] localAlignExternal(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
+		 localAlignment(scoringMatrix, indelPenalty, reference, search);
+		 return returnAlignment();
+	 } 
 	
 	//produces the backtrack sequences:
 	private static void followLocalBacktrack(String reference, String search, char[][] backtrack, int row, int col) {
