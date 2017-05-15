@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class LinearSpaceLocalAlignment {
 	
 	// this returns the coordinates and score of the end of the local alignment
-	public static int[] findEndBoundary(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
+	public static int[] findLocalBoundaries(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		// this will hold the data to be returned:
 		int[] coordinateData = new int[5];
 		int refIndex = 0;
@@ -99,14 +99,30 @@ public class LinearSpaceLocalAlignment {
 		
 		//this variable holds the three data points to be returned:
 		coordinateData[0] = maxScoreValue;
-		coordinateData[1] = refIndex;
-		coordinateData[2] = searchIndex;
-		coordinateData[3] = refIndexFirst;
-		coordinateData[4] = searchIndexFirst;
+		coordinateData[1] = refIndexFirst;
+		coordinateData[2] = searchIndexFirst;
+		coordinateData[3] = refIndex;
+		coordinateData[4] = searchIndex;
 		
 		return coordinateData;
 	}
 	
+	
+	//linear Space local Align:
+	public static String[] linearSpaceLocalAlign(int[][] scoringMatrix, int indelPenalty, String reference, String search ) {
+		int[] gridInfo = findLocalBoundaries(scoringMatrix, 5, reference, search);
+		
+		String refLocal = reference.substring(gridInfo[1], gridInfo[3]+1);
+		String searchLocal = search.substring(gridInfo[2], gridInfo[4]+1);
+		
+//		int score = Hirschberg.scoreGlobally(scoringMatrix, indelPenalty, refLocal, searchLocal);
+//		
+//		System.out.println(score);
+		
+		String[] alignment = GlobalAlignment_old.globalAlignExternal(scoringMatrix, indelPenalty, refLocal, searchLocal);
+		
+		return alignment;
+	}
 	
 	public static void main(String[] args) {
 		Scanner s = new Scanner(System.in);
@@ -115,13 +131,20 @@ public class LinearSpaceLocalAlignment {
 		String search = s.nextLine();
 		s.close();
 		
-		int[] scores = findEndBoundary(Scoring.PAM250, 5, reference, search);
+		int[] scores = findLocalBoundaries(Scoring.PAM250, 5, reference, search);
 		
-		System.out.println(scores[0]);
-
-		System.out.println(scores[1]);
-		System.out.println(scores[2]);
-		System.out.println(scores[3]);
-		System.out.println(scores[4]);
+//		System.out.println(scores[0]);
+//
+//		System.out.println(scores[1]);
+//		System.out.println(scores[2]);
+//		System.out.println(scores[3]);
+//		System.out.println(scores[4]);
+		
+		String[] align = linearSpaceLocalAlign(Scoring.PAM250, 5, reference, search);
+		
+		//System.out.println(Hirschberg.scoreGlobally(Scoring.PAM250, 5, reference, search));
+		
+		System.out.println(align[0]);
+		System.out.println(align[1]);
 	}
 }

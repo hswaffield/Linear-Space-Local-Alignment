@@ -11,7 +11,7 @@ public class GlobalAlignment_old {
 	
 	 //This computes the actual global alignment:
 	//include an indel penalty param
-	 public static void globalAlignment(int[][] scoringMatrix, String reference, String search) {
+	 public static void globalAlignment(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
 		 //top and leftmost rows reflect no substring, not even first letter...
 		 int width = reference.length() + 1;
 		 int height = search.length() + 1;
@@ -22,12 +22,12 @@ public class GlobalAlignment_old {
 		 //initiliazing base cases
 		 for (int i = 0; i < width; i++) {
 			 backtrack[0][i] = '<';
-			 alignment[0][i] = -5 * i;
+			 alignment[0][i] = (0 - indelPenalty) * i;
 		 }
 		 
 		 for (int i = 0; i < height; i++) {
 			 backtrack[i][0] = '^';
-			 alignment[i][0] = -5 * i;
+			 alignment[i][0] = (0 - indelPenalty) * i;
 		 }
 			 
 		 backtrack[0][0] = '/';
@@ -42,10 +42,10 @@ public class GlobalAlignment_old {
 				 char indelBack;
 				 
 				 if (alignment[i-1][j] >= alignment[i][j-1]) {
-					 maxIndel = alignment[i-1][j] - 5;
+					 maxIndel = alignment[i-1][j] - indelPenalty;
 					 indelBack = '^';
 				 } else {
-					 maxIndel = alignment[i][j-1] - 5;
+					 maxIndel = alignment[i][j-1] - indelPenalty;
 					 indelBack = '<';
 				 }
 				 
@@ -93,10 +93,38 @@ public class GlobalAlignment_old {
 		 String second = s.nextLine();
 		 s.close();
 		 
-		 globalAlignment(Scoring.BLOSUM62, first, second);
+		 globalAlignment(Scoring.BLOSUM62, 5, first, second);
 		 printAlignment();
 	 }
 	 
+	
+	 public static String[] returnAlignment() {
+		 //char[] first = alignFirst.toArray(new char[alignFirst.size()]);
+		 
+		 int len = alignFirst.size();
+		 
+		 char[] first = new char[len];
+		 char[] second = new char[len];
+		 
+		 for (int i = 0; i < len; i++) {
+			 first[i] = alignFirst.removeFirst();
+			 second[i] = alignSecond.removeFirst();
+		 }
+		 
+		 
+		 String[] alignment = new String[2];
+		 alignment[0] = String.valueOf(first);
+		 alignment[1] = String.valueOf(second);
+		 
+		 return alignment;
+	 }
+
+
+	 // for other classes to use:
+	 public static String[] globalAlignExternal(int[][] scoringMatrix, int indelPenalty, String reference, String search) {
+		 globalAlignment(scoringMatrix, indelPenalty, reference, search);
+		 return returnAlignment();
+	 } 
 	
 	//Follows the backtrack matrix, and adds characters to actual sequences
 	 private static void followBacktrack(String str1, String str2, char[][] backtrack, int row, int col ){
